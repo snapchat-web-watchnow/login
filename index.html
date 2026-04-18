@@ -1,0 +1,229 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Hilda • 21st Cosmic Experience</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<style>
+body {
+  margin: 0;
+  overflow: hidden;
+  background: black;
+  font-family: Arial, sans-serif;
+}
+
+/* 🌌 CANVAS */
+canvas { display:block; }
+
+/* 💎 GLASS UI */
+#ui {
+  position: fixed;
+  inset: 0;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  z-index:10;
+  pointer-events:none;
+}
+
+.card {
+  width: 80%;
+  max-width: 800px;
+  padding: 35px;
+  border-radius: 25px;
+
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(20px);
+
+  color: white;
+  text-align: center;
+
+  box-shadow: 0 0 80px rgba(255, 0, 180, 0.25);
+
+  animation: fadeIn 2s ease forwards;
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+@keyframes fadeIn {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+h1 {
+  font-size: 2rem;
+  margin-bottom: 15px;
+}
+
+p {
+  font-size: 1rem;
+  line-height: 1.6;
+  opacity: 0.9;
+}
+
+/* 🎬 INTRO */
+#intro {
+  position: fixed;
+  inset: 0;
+  background: black;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  color:white;
+  font-size: 2rem;
+  letter-spacing: 6px;
+  z-index: 999;
+  animation: intro 3.5s ease forwards;
+}
+
+@keyframes intro {
+  0% {opacity:1;}
+  80% {opacity:1;}
+  100% {opacity:0; visibility:hidden;}
+}
+</style>
+</head>
+
+<body>
+
+<div id="intro">A COSMIC MESSAGE FOR HILDA</div>
+
+<div id="ui">
+  <div class="card">
+    <h1>Happy 21st, Hilda 🎉</h1>
+    <p>
+      🥂 DAY 21: A new era of greatness. Born in 2005, you’ve turned every moment into a vibe.<br><br>
+
+      From chaotic giggles to deep talks — you’re pure magic.<br><br>
+
+      May your 21st year be packed with glittering wins, electric sunsets, and a heart that stays wild & free.<br><br>
+
+      You deserve confetti every single day. 🎉<br><br>
+
+      💥 Shine bright, shine fearless, shine exactly as you are. 💥
+    </p>
+  </div>
+</div>
+
+<script>
+
+/* 🎧 SOUND ENGINE */
+const audio = new (window.AudioContext || window.webkitAudioContext)();
+
+function sound(type){
+  const o = audio.createOscillator();
+  const g = audio.createGain();
+
+  o.connect(g);
+  g.connect(audio.destination);
+
+  o.type = type === "boom" ? "sawtooth" : "sine";
+  o.frequency.value = type === "boom" ? 80 : 600;
+
+  g.gain.value = 0.4;
+
+  o.start();
+  g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + 0.6);
+  o.stop(audio.currentTime + 0.6);
+}
+
+/* 🪐 SCENE */
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 1000);
+camera.position.z = 60;
+
+const renderer = new THREE.WebGLRenderer({ antialias:true });
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+
+/* 🌌 GALAXY */
+const count = 5000;
+const geo = new THREE.BufferGeometry();
+const pos = [];
+
+for(let i=0;i<count;i++){
+  let a = i * 0.02;
+  let r = 5 + i * 0.01;
+
+  pos.push(Math.cos(a)*r, (Math.random()-0.5)*20, Math.sin(a)*r);
+}
+
+geo.setAttribute("position", new THREE.Float32BufferAttribute(pos,3));
+
+const mat = new THREE.PointsMaterial({
+  size:0.6,
+  color:0xffffff
+});
+
+const galaxy = new THREE.Points(geo,mat);
+scene.add(galaxy);
+
+/* 💖 CORE */
+const core = new THREE.Mesh(
+  new THREE.SphereGeometry(6,32,32),
+  new THREE.MeshBasicMaterial({color:0xff4fd8,wireframe:true})
+);
+scene.add(core);
+
+/* 🎆 PARTICLES */
+let particles=[];
+
+function burst(type="circle"){
+  sound("boom");
+
+  for(let i=0;i<80;i++){
+    let angle = (i/80)*Math.PI*2;
+
+    particles.push({
+      x:0,y:0,z:0,
+      vx: Math.cos(angle)*2,
+      vy: Math.sin(angle)*2,
+      vz: (Math.random()-0.5),
+      life:100
+    });
+  }
+}
+
+/* 🌠 INTERACTION */
+window.addEventListener("click",()=>{
+  if(audio.state==="suspended") audio.resume();
+  burst();
+});
+
+/* 🔁 LOOP */
+function animate(){
+  requestAnimationFrame(animate);
+
+  galaxy.rotation.y += 0.001;
+  core.rotation.y += 0.01;
+
+  particles.forEach(p=>{
+    p.x += p.vx;
+    p.y += p.vy;
+    p.z += p.vz;
+    p.life--;
+  });
+
+  camera.position.x = Math.sin(Date.now()*0.001)*2;
+  camera.position.y = Math.cos(Date.now()*0.001)*2;
+
+  renderer.render(scene,camera);
+}
+
+animate();
+
+/* 📱 RESIZE */
+window.addEventListener("resize",()=>{
+  camera.aspect = innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+});
+
+</script>
+
+</body>
+</html>
+```
